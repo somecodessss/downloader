@@ -33,8 +33,7 @@ def validate_url(u):
     host = pr.hostname or ''
     if host_blocked(host):
         abort(403)
-    if not ext_allowed(pr.path):
-        abort(415)
+
 
 @app.get('/')
 def root():
@@ -50,9 +49,8 @@ def fetch():
         head = requests.head(u, allow_redirects=True, timeout=TIMEOUT)
     except requests.RequestException:
         abort(502)
-    ct = (head.headers.get('Content-Type') or '').lower()
-    if 'audio' not in ct:
-        abort(415)
+ct = (head.headers.get('Content-Type') or '').lower()
+
     cl = head.headers.get('Content-Length')
     if cl:
         try:
@@ -64,13 +62,17 @@ def fetch():
         r = requests.get(u, stream=True, allow_redirects=True, timeout=TIMEOUT)
     except requests.RequestException:
         abort(502)
+cd = r.headers.get('Content-Disposition') or ''
+if 'filename=' in cd:
+    fname = cd.split('filename=')[-1].strip('"; ')
+else:
     fname = filename_from_url(r.url)
-    def generate():
-        for chunk in r.iter_content(CHUNK):
-            if chunk:
-                yield chunk
-    headers = {
-        'Content-Type': r.headers.get('Content-Type', ct or 'application/octet-stream'),
-        'Content-Disposition': f'attachment; filename="{fname}"'
-    }
-    return Response(generate(), headers=headers)
+def generate():
+    for chunk in r.iter_content(CHUNK):
+        if chunk:
+            yield chunk
+headers = {
+    'Content-Type': (r.headers.get('Content-Type') or ct or 'application/octet-stream'),
+    'Content-Disposition': f'attachment; filename="{fname}"'
+}
+return Response(generate(), headers=headers)

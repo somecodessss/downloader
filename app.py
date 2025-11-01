@@ -6,10 +6,6 @@ import posixpath
 
 app = Flask(__name__)
 
-BLOCKED_DOMAINS = {
-    'youtube.com','youtu.be','spotify.com','spotifycdn.com','soundcloud.com',
-    'music.apple.com','apple.com','tiktok.com','tiktokcdn.com','bandcamp.com'
-}
 MAX_BYTES = int(os.getenv('MAX_BYTES', str(52428800)))
 TIMEOUT = (5, 20)
 CHUNK = 65536
